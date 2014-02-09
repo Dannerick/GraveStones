@@ -1,0 +1,11 @@
+Changes in v2.1 (1-25-2014)
+* fixed missing setUnlocalizedName on Bones that caused conflict with blocks in other mods without unlocalized names (ei Extra Utilities drums)
+* fixed crash with armor rendering when an item in an armor slot was not a descendant of ItemArmor class
+* changed grave placement search to look for a location in a circle around the death instead of a straight line away from the death
+* changed grave placement routine to not placing a grave on top of an existing tile entity
+* added config setting for disabling the beacon display
+* added config setting for changing the number of times to search for a grave location before giving up (was hard coded 100 in straight line away)
+* added config setting for setting the maximum height of the grave location
+* added config setting to change the chance of bones being placed under the grave, setting to 0 will disable bones (was 50% hard coded)
+* added log entry for when a grave is not placed and why, added log entry for placing a grave
+* changed grave placement to allow graves to be place on "replacable" blocks, like snow and grass

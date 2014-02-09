@@ -14,6 +14,7 @@ import gravestone.handelers.PacketHandler;
 import gravestone.handelers.PlayerTracker;
 
 import java.util.Random;
+import java.util.logging.Level;
 
 import modUpdateChecked.OnPlayerLogin;
 import net.minecraft.block.Block;
@@ -28,6 +29,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.client.registry.RenderingRegistry;
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.SidedProxy;
@@ -41,18 +43,14 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
 
-@Mod(modid = "GraveStoneMod", name = "GraveStone", version = mod_Gravestone.version)
+@Mod(modid = ModInfo.ID, name = ModInfo.NAME, version = ModInfo.VERSION)
 @NetworkMod(clientSideRequired = true, serverSideRequired = false,
 clientPacketHandlerSpec =
-@SidedPacketHandler(channels = {"graveData"}, packetHandler = PacketHandler.class),
+@SidedPacketHandler(channels = {ModInfo.ID}, packetHandler = PacketHandler.class),
 serverPacketHandlerSpec =
-@SidedPacketHandler(channels = {"graveData"}, packetHandler = PacketHandler.class))
+@SidedPacketHandler(channels = {ModInfo.ID}, packetHandler = PacketHandler.class))
 
 public class mod_Gravestone{
-	
-	protected static final String version = "1.6.4 v2";
-	private static final String name = "GraveStones";
-
 	public static mod_Gravestone instance;
 	public ItemStack[] stack;
 	public int renderID = RenderingRegistry.getNextAvailableRenderId();
@@ -69,24 +67,26 @@ public class mod_Gravestone{
 	}
 
 	@EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
-
+	public void preInit(FMLPreInitializationEvent event) 
+	{
 		ConfigClass.instance.loadConfig(event.getSuggestedConfigurationFile());
+		LogHelper.init();
 	}
 	@EventHandler
 	public void load(FMLInitializationEvent event)
 	{
+		LogHelper.log(Level.INFO, "Starting item and block initialization");
 		MinecraftForge.EVENT_BUS.register(new DeathEvent());
-		GameRegistry.registerPlayerTracker(new OnPlayerLogin(version, name));
+		GameRegistry.registerPlayerTracker(new OnPlayerLogin(ModInfo.VERSION, ModInfo.NAME, ConfigClass.instance.checkUpdates));
 		
 		gravestone = new BlockGrave(ConfigClass.instance.graveBlock).setHardness(10).setResistance(6000000.0F).setUnlocalizedName("GraveStone");
-		bones = new BlockBones(ConfigClass.instance.bonesBlock, Material.ground).setHardness(2f);
+		bones = new BlockBones(ConfigClass.instance.bonesBlock, Material.ground).setHardness(2f).setUnlocalizedName("Bones");
 		graveItem = new ItemGrave(ConfigClass.instance.grave).setUnlocalizedName("graveItem").setCreativeTab(CreativeTabs.tabDecorations);
 		bonesItem = new ItemSkulls(ConfigClass.instance.bones).setUnlocalizedName("bonesItem").setCreativeTab(CreativeTabs.tabDecorations);
 
 		GameRegistry.registerBlock(gravestone,"GraveStone");
 		LanguageRegistry.addName(gravestone, "GraveStone");
-		GameRegistry.registerBlock(bones,"Bones");
+		GameRegistry.registerBlock(bones, "Bones");
 		LanguageRegistry.addName(bones, "Bones");
 		LanguageRegistry.addName(graveItem, "Grave");
 		LanguageRegistry.addName(bonesItem, "Bone and Skull");
@@ -112,52 +112,90 @@ public class mod_Gravestone{
 	public void buildGravestone(EntityPlayer player, InventoryPlayer inv ) {
 
 		int x = MathHelper.floor_double(player.posX),
-				y = MathHelper.floor_double(player.posY),
-				z = MathHelper.floor_double(player.posZ);
-		if(player.worldObj.isAirBlock(x, y, z)){
-			if(y < 0){
-				return;
-			}
-			while(player.worldObj.isAirBlock(x, y, z)){
-				y--;
-			}
-		}
-		int scanTime = 0;
-		while(scanTime < 100 && (!player.worldObj.getBlockMaterial(x, y, z).isSolid() || !player.worldObj.getBlockMaterial(x, y - 1, z).isSolid())){
-			scanTime++;
-			if(y < 0){
-				return;
-			}
-			//Diagonal movement, avoids portal bugs
-			x++;
-			z++;
-			while(player.worldObj.isAirBlock(x, y, z)){
-				if(y < 0){
-					return;
+			y = MathHelper.floor_double(player.posY),
+			z = MathHelper.floor_double(player.posZ);
+		int x_off, z_off, dist_off;
+		try
+		{
+			if(player.worldObj.isAirBlock(x, y, z)){
+				while(y >= 0 && player.worldObj.isAirBlock(x, y, z)){
+					y--;
 				}
-				y--;
+				if(y < 0){
+					throw new NoGraveException("Death not above solid ground");
+				}
 			}
-			while(!player.worldObj.isAirBlock(x, y + 1, z) && y < 512){
-				y++;
+			
+			int scanTime = 0,
+				grave_y = checkGraveLocation(player, x, y, z, scanTime);
+			while(scanTime < ConfigClass.instance.maxPlaceAttempts && grave_y == 0){
+				scanTime++;
+				grave_y = checkGraveLocation(player, x, y, z, scanTime);
 			}
+			if (scanTime == ConfigClass.instance.maxPlaceAttempts) {
+				throw new NoGraveException("No position located after " + 
+					ConfigClass.instance.maxPlaceAttempts + " attempts");
+			}
+			y = grave_y + 1;
+			x_off = (scanTime & 1) * 2 - 1;
+			z_off = ((scanTime >>> 1) & 1) * 2 - 1;
+			dist_off = scanTime >>> 2;
 		}
-		if(scanTime == 100){
-			//never found a plot.
+		catch (NoGraveException ex)
+		{
+			LogHelper.log(Level.INFO, "No grave made for " + player.getDisplayName() + ": " + ex.getMessage());
 			return;
 		}
-		y+=1;
+		
+		// set location
+		x = x + x_off * dist_off;
+		z = z + z_off * dist_off;
 
+		// place grave
 		player.worldObj.setBlock(x, y, z, gravestone.blockID);
 		TileEntity te = player.worldObj.getBlockTileEntity(x, y, z);
-
-		int c = rand.nextInt(2);
-		if(c == 0)
+		LogHelper.log(Level.INFO, String.format("Grave placed for %s at (%d, %d, %d)", player.getDisplayName(), x, y, z));
+		
+		// check for bones placement
+		int c = rand.nextInt(100);
+		if(ConfigClass.instance.bonesPlacementChance > 0 && c < ConfigClass.instance.bonesPlacementChance)
 		{
 			player.worldObj.setBlock(x, y-2, z, bones.blockID);
 			player.worldObj.setBlockTileEntity(x, y-2, z,new TEBones());
 		}
 
 		placeGrave(te, player, inv);
+	}
+	
+	private int checkGraveLocation(EntityPlayer player, int start_x, int start_y, int start_z, int count)
+	{
+		int x_off = (count & 1) * 2 - 1, 
+			z_off = ((count >>> 1) & 1) * 2 - 1,
+			dist_off = count >>> 2;
+		int x = start_x + x_off * dist_off,
+			z = start_z + z_off * dist_off,
+			y = start_y;
+
+		while(y > 0 && (player.worldObj.isAirBlock(x, y, z) || player.worldObj.getBlockMaterial(x, y, z).isReplaceable()) ){
+			y--;
+		}
+		while(y < ConfigClass.instance.maxGraveHeight && !(player.worldObj.isAirBlock(x, y + 1, z) || player.worldObj.getBlockMaterial(x, y + 1, z).isReplaceable()) ){
+			y++;
+		}
+		if (y < 2 || y >= ConfigClass.instance.maxGraveHeight)
+		{
+			return 0;
+		}
+
+		if (player.worldObj.getBlockMaterial(x, y, z).isSolid() && player.worldObj.getBlockMaterial(x, y - 1, z).isSolid())
+		{
+			if (player.worldObj.getBlockTileEntity(x, y, z) == null && 
+				player.worldObj.getBlockTileEntity(x, y - 1, z) == null && 
+				player.worldObj.getBlockTileEntity(x, y + 1, z) == null) {
+					return y;
+			}
+		}
+		return 0;
 	}
 	
 	private void placeGrave(TileEntity te , EntityPlayer player, InventoryPlayer inv){

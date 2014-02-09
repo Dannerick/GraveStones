@@ -1,4 +1,5 @@
 package gravestone.grave.te;
+import gravestone.ConfigClass;
 import gravestone.grave.ModelGrave;
 import gravestone.grave.ModelHead;
 import net.minecraft.client.Minecraft;
@@ -35,8 +36,8 @@ public class TEGraveSpecial extends TileEntitySpecialRenderer // because your bl
 
 	public void renderAModelAt(TEGrave tile, double d, double d1, double d2, float f)
 	{
-
-		renderBeam(tile, d, d1, d2);
+		if (ConfigClass.instance.displayGraveBecon)
+			renderBeam(tile, d, d1, d2);
 
 		this.switchTexture(tile.theMeta);
 		float rot = tile.ModelRotation;
@@ -158,9 +159,11 @@ public class TEGraveSpecial extends TileEntitySpecialRenderer // because your bl
 			GL11.glScalef(f2,f2,f2);
 			GL11.glTranslatef(0f, 0.05f, 0f);
 			ItemStack item = tile.getStackInSlot(tile.getSizeInventory()-1);
-			helper.setArmorModel(modelarmorhead, item, 
-					((ItemArmor)item.getItem()).armorType, RenderBiped.bipedArmorFilenamePrefix[((ItemArmor)item.getItem()).renderIndex]);
-			modelarmorhead.renderHead(0.0625f); //render(null, 0, 0, 0, 0, 0, 0.0625f);
+			if (item.getItem() instanceof ItemArmor) {
+				helper.setArmorModel(modelarmorhead, item, 
+						((ItemArmor)item.getItem()).armorType, RenderBiped.bipedArmorFilenamePrefix[((ItemArmor)item.getItem()).renderIndex]);
+				modelarmorhead.renderHead(0.0625f); //render(null, 0, 0, 0, 0, 0, 0.0625f);
+			}
 		}
 		GL11.glPopMatrix();
 		
@@ -170,9 +173,11 @@ public class TEGraveSpecial extends TileEntitySpecialRenderer // because your bl
 			GL11.glScalef(f2,f2,f2);
 			GL11.glTranslatef(0f, -0.02f, 0f);
 			ItemStack item = tile.getStackInSlot(tile.getSizeInventory()-2);
-			helper.setArmorModel(modelarmorchest, item, 
-					((ItemArmor)item.getItem()).armorType, RenderBiped.bipedArmorFilenamePrefix[((ItemArmor)item.getItem()).renderIndex]);
-			modelarmorchest.renderHead(0.0625f); // render(null, 0, 0, 0, 0, 0, 0.0625f);
+			if (item.getItem() instanceof ItemArmor) {
+				helper.setArmorModel(modelarmorchest, item, 
+						((ItemArmor)item.getItem()).armorType, RenderBiped.bipedArmorFilenamePrefix[((ItemArmor)item.getItem()).renderIndex]);
+				modelarmorchest.renderHead(0.0625f); // render(null, 0, 0, 0, 0, 0, 0.0625f);
+			}
 		}
 		GL11.glPopMatrix();
 

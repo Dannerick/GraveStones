@@ -15,16 +15,19 @@ public class OnPlayerLogin implements IPlayerTracker{
 
 	private String version;
 	private String name;
+	private boolean checkUpdates;
 
-	public OnPlayerLogin(String modVersion, String modName){
+	public OnPlayerLogin(String modVersion, String modName, boolean configCheckUpdates){
 		version = modVersion;
 		name = modName;
+		checkUpdates = configCheckUpdates;
 	}
 
 
 	@Override
-	public void onPlayerLogin(EntityPlayer player) {	
-		verifyModVersion(player);
+	public void onPlayerLogin(EntityPlayer player) {
+		if (checkUpdates)
+			verifyModVersion(player);
 	}
 
 

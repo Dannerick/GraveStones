@@ -1,0 +1,22 @@
+[
+{
+  "modid": "gravestone",
+  "name": "GraveStones",
+  "description": "Custom death chest mod",
+  "version": "@VERSION@",
+  "url": "http://www.minecraftforum.net/topic/1762087-164-smpssp-minecraft-graves-die-classy/",
+  "updateUrl": "",
+  "authorList": [
+    "senpaisubaraki",
+    "Dannerick"
+  ],
+  "credits": "By senpaisubaraki",
+  "logoFile": "",
+  "screenshots": [
+  ],
+  "parent":"",
+  "dependencies": [
+  ],
+  "mcversion": "1.6.4"
+}
+]
