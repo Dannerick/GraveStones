@@ -176,10 +176,10 @@ public class mod_Gravestone{
 			z = start_z + z_off * dist_off,
 			y = start_y;
 
-		while(y > 0 && (player.worldObj.isAirBlock(x, y, z) || player.worldObj.getBlockMaterial(x, y, z).isReplaceable()) ){
+		while(y > 0 && (player.worldObj.isAirBlock(x, y, z) || (player.worldObj.getBlockMaterial(x, y, z).isReplaceable() && !player.worldObj.getBlockMaterial(x,  y,  z).isLiquid() )) ){
 			y--;
 		}
-		while(y < ConfigClass.instance.maxGraveHeight && !(player.worldObj.isAirBlock(x, y + 1, z) || player.worldObj.getBlockMaterial(x, y + 1, z).isReplaceable()) ){
+		while(y < ConfigClass.instance.maxGraveHeight && !(player.worldObj.isAirBlock(x, y + 1, z) || (player.worldObj.getBlockMaterial(x, y, z).isReplaceable() && !player.worldObj.getBlockMaterial(x,  y,  z).isLiquid() )) ){
 			y++;
 		}
 		if (y < 2 || y >= ConfigClass.instance.maxGraveHeight)
