@@ -1,3 +1,7 @@
+Changes in v2.2 (2-12-2014)
+* fix problem with graves spawning in liquids
+* added a chance for a player head to drop when breaking bones
+
 Changes in v2.1 (1-25-2014)
 * fixed missing setUnlocalizedName on Bones that caused conflict with blocks in other mods without unlocalized names (ei Extra Utilities drums)
 * fixed crash with armor rendering when an item in an armor slot was not a descendant of ItemArmor class

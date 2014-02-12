@@ -98,7 +98,7 @@
 		<!-- Build the jar -->
 		<mkdir dir="${environment.release_location}/MC ${build.minecraft_version}/${build.mod_version}" />
 		<jar destfile="${environment.release_location}/MC ${build.minecraft_version}/${build.mod_version}/GraveStones-${build.mod_version}-${build.build_number}.jar">
-			<fileset dir="${environment.mcp_location}/reobf/minecraft" excludes="**/net/**">
+			<fileset dir="${environment.mcp_location}/reobf/minecraft" excludes="**/net/**" />
 			<fileset dir="${environment.source_location}/resources" excludes="**/xcf/**" />
 		</jar>
 
