@@ -97,6 +97,12 @@ public class BlockBones extends BlockContainer {
 		EntityItem item;
 		item = new EntityItem(world, x,y,z, new ItemStack(Item.bone, c));
 		world.spawnEntityInWorld(item);
+		if (rand.nextInt(10) == 0) {
+			ItemStack skull = new ItemStack(Item.skull, 1);
+			skull.setItemDamage(3);
+			item = new EntityItem(world, x,y,z, skull);
+			world.spawnEntityInWorld(item);
+		}
 
 		world.removeBlockTileEntity(x,y,z);
 	}
